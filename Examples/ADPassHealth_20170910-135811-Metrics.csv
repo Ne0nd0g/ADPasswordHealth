@@ -1,0 +1,7 @@
+,Accounts,LM,NTLM,Unique LM,Unique NTLM,Cracked,Blank LM,Blank NTLM,Weak,Not Weak,Enabled,Disabled,Cracked (%),Enabled (%)
+machine,50,4,50,4,50,2,46,0,1,49,47,3,4.00%,94.00%
+local,2,2,2,2,2,2,0,0,2,0,2,0,100.00%,100.00%
+widgets.acme.com,5,0,0,0,0,5,5,5,5,0,5,0,100.00%,100.00%
+labs.acme.com,9,1,9,1,9,8,8,0,6,3,8,1,88.89%,88.89%
+acme.com,84,17,84,17,82,71,67,0,63,21,71,13,84.52%,84.52%
+Grand Total,150,24,145,24,143,88,126,5,77,73,133,17,58.67%,88.67%
