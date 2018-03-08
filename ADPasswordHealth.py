@@ -56,8 +56,8 @@ def check_HiBP_api(users):
     pool = Pool(processes=30)
     
     for code, password in pool.imap_unordered(getResponseCode, [(urlpath + pw) for pw in TestPasswords]):
-    if (code == 200):
-        CompromisedPW.append(password)
+        if (code == 200):
+            CompromisedPW.append(password)
 
     return frozenset(CompromisedPW)
 
