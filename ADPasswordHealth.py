@@ -33,6 +33,14 @@ info = "\033[0;0;36m[i]\033[0m"
 question = "\033[0;0;37m[?]\033[0m"
 debug = "\033[0;0;31m[DEBUG]\033[0m"
 
+def getResponseCode(url):
+        try:
+            req = urllib2.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            con = urllib2.urlopen(req, context=ssl_context)
+            return con.getcode(), "/".join(url.split("/")[4:])
+        except urllib2.HTTPError as e:
+            return 404, "dud"
+
 def check_HiBP_api(users):
     """Check cracked password against HiBP API"""
 
@@ -40,14 +48,6 @@ def check_HiBP_api(users):
     CompromisedPW = []
     TestPasswords = []
     urlpath = "https://api.pwnedpasswords.com/pwnedpassword/"
-
-    def getResponseCode(url):
-        try:
-            req = urllib2.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-            con = urllib2.urlopen(req, context=ssl_context)
-            return con.getcode(), "/".join(url.split("/")[4:])
-        except urllib2.HTTPError as e:
-            return 404, "dud"
 
     for user in users:
         if (users[user]['cracked'] != None):
