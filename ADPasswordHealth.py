@@ -367,7 +367,7 @@ def write_password_health_csv(users, csv_file_path):
                                  users[u]['lm'],
                                  users[u]['ntlm'],
                                  users[u]['cracked'],
-                                 users[u]['compromised']
+                                 users[u]['compromised'],
                                  users[u]['weak'],
                                  users[u]['pwdlastset'],
                                  ]
