@@ -5,6 +5,11 @@ import os
 import argparse
 import csv
 
+# Check HiBP API
+import ssl
+import urllib2
+from multiprocessing import Pool
+
 #################################################
 #                    Variables                  #
 #################################################
@@ -28,6 +33,44 @@ info = "\033[0;0;36m[i]\033[0m"
 question = "\033[0;0;37m[?]\033[0m"
 debug = "\033[0;0;31m[DEBUG]\033[0m"
 
+def check_HiBP_api(users):
+    """Check cracked password against HiBP API"""
+
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+    CompromisedPW = []
+    TestPasswords = []
+    urlpath = "https://api.pwnedpasswords.com/pwnedpassword/"
+
+    def getResponseCode(url):
+        try:
+            req = urllib2.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            con = urllib2.urlopen(req, context=ssl_context)
+            return con.getcode(), "/".join(url.split("/")[4:])
+        except urllib2.HTTPError as e:
+            return 404, "dud"
+
+    for user in users:
+        if (users[user]['cracked'] != None):
+            TestPasswords.append(users[user]['cracked'])
+
+    pool = Pool(processes=30)
+    
+    for code, password in pool.imap_unordered(getResponseCode, [(urlpath + pw) for pw in TestPasswords]):
+    if (code == 200):
+        CompromisedPW.append(password)
+
+    return frozenset(CompromisedPW)
+
+def update_compromised(users, pwnedSet):
+    for user in users:
+        if (users[user]['cracked'] != None):
+            if users[user]['cracked'] in pwnedSet:
+                users[user]['compromised'] = True
+            else:
+                continue
+        else:
+            continue
+    return users
 
 def generate_accounts_dict(john, secrets):
     """Generate a dictionary object containing user account information and weak passwords"""
@@ -92,7 +135,7 @@ def generate_accounts_dict(john, secrets):
                 users[s[0]] = {'user': u, 'domain': d, 'rid': r,
                                'lm': lm, 'ntlm': ntlm, 'pwdlastset': p,
                                'cracked': None, 'enabled': e, 'loc': None,
-                               'weak': None, 'name': None, 'type': t}
+                               'weak': None, 'name': None, 'type': t, 'compromised': False}
             else:
                 print warn + "User already in dataset!"
                 print warn + "User:RID already in dataset: %s:%s" % (users[s[0]]['user'], r)
@@ -281,6 +324,9 @@ def write_password_health_csv(users, csv_file_path):
     h = None
     if args.exclude:
         h = ["Account Type", "RID", "Domain", "Username", "Account Status", "Password Health", "Password Last Set"]
+    elif args.pwned:
+        h = ["Account Type", "RID", "Domain", "Username", "Account Status", "LM", "NTLM", "Cracked Password", "Compromised",
+             "Password Health", "Password Last Set"]
     else:
         h = ["Account Type", "RID", "Domain", "Username", "Account Status", "LM", "NTLM", "Cracked Password",
              "Password Health", "Password Last Set"]
@@ -309,6 +355,19 @@ def write_password_health_csv(users, csv_file_path):
                                  users[u]['domain'],
                                  users[u]['user'],
                                  users[u]['enabled'],
+                                 users[u]['weak'],
+                                 users[u]['pwdlastset'],
+                                 ]
+                elif args.pwned:
+                    data_list = [users[u]['type'],
+                                 users[u]['rid'],
+                                 users[u]['domain'],
+                                 users[u]['user'],
+                                 users[u]['enabled'],
+                                 users[u]['lm'],
+                                 users[u]['ntlm'],
+                                 users[u]['cracked'],
+                                 users[u]['compromised']
                                  users[u]['weak'],
                                  users[u]['pwdlastset'],
                                  ]
@@ -395,6 +454,8 @@ if __name__ == '__main__':
                         help='Disable the calculation of metrics of AD password health data.')
     parser.add_argument('-E', '--exclude', default=False, action='store_true',
                         help="Exclude cracked password from output")
+    parser.add_argument('--pwned', default=False, action='store_true',
+                        help="Check cracked passwords against Have I Been Pwned API.")
     parser.add_argument('--machine', default=False, action='store_true',
                         help="Include machine accounts in results")
     parser.add_argument('-O', '--output', help="Output directory", required=True)  # TODO add this for tab completion
@@ -414,6 +475,11 @@ if __name__ == '__main__':
                 exit(1)
 
         accounts = generate_accounts_dict(args.john, args.secrets)
+        # Check HiBP API
+        if args.pwned:
+            compromisedList = check_HiBP_api(accounts)
+            accounts = update_compromised(accounts, compromisedList)
+
         accounts = evaluate_password_health(accounts, args.number, args.rules)
         if args.aduserinfo:
             accounts = get_ad_user_info(accounts, args.aduserinfo)
