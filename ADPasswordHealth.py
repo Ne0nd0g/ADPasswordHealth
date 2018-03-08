@@ -34,6 +34,7 @@ question = "\033[0;0;37m[?]\033[0m"
 debug = "\033[0;0;31m[DEBUG]\033[0m"
 
 def getResponseCode(url):
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
         try:
             req = urllib2.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
             con = urllib2.urlopen(req, context=ssl_context)
@@ -44,7 +45,6 @@ def getResponseCode(url):
 def check_HiBP_api(users):
     """Check cracked password against HiBP API"""
 
-    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
     CompromisedPW = []
     TestPasswords = []
     urlpath = "https://api.pwnedpasswords.com/pwnedpassword/"
