@@ -35,12 +35,12 @@ debug = "\033[0;0;31m[DEBUG]\033[0m"
 
 def getResponseCode(url):
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
-        try:
-            req = urllib2.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-            con = urllib2.urlopen(req, context=ssl_context)
-            return con.getcode(), "/".join(url.split("/")[4:])
-        except urllib2.HTTPError as e:
-            return 404, "dud"
+    try:
+        req = urllib2.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        con = urllib2.urlopen(req, context=ssl_context)
+        return con.getcode(), "/".join(url.split("/")[4:])
+    except urllib2.HTTPError as e:
+        return 404, "dud"
 
 def check_HiBP_api(users):
     """Check cracked password against HiBP API"""
