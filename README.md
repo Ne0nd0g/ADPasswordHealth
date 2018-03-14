@@ -81,6 +81,13 @@ only seven characters long). This can be changed with the `-N` flag.
 administrative accounts don't always follow the domain's password
 policy.
 
+## Password Compromise
+
+The script can be run with the `--pwned` flag to test the recovered passwords
+against the [Have I Been Pwned](https://haveibeenpwned.com/API/v2) API. 
+Recovered passwords will be labeled compromised if they are discovered in the HiBP 
+password dump.
+
 ## Exclude Passwords
 
 The script can be run with the `-E` flag to exclude the password hashes
@@ -155,7 +162,7 @@ Example command:
 ```
 usage: ADPasswordHealth.py [-h] -J JOHN -S SECRETS [-R RULES] [-A ADUSERINFO]
                            [-N NUMBER] [-M] [-E] [--machine] -O OUTPUT
-                           [--verbose] [--debug]
+                           [--verbose] [--debug] [--pwned]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -189,6 +196,7 @@ optional arguments:
   -M, --metrics         Disable the calculation of metrics of AD password
                         health data.
   -E, --exclude         Exclude cracked password from output
+  --pwned               Check cracked passwords against Have I Been Pwned API
   --machine             Include machine accounts in results
   -O OUTPUT, --output OUTPUT
                         Output directory
