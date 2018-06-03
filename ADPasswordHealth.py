@@ -6,6 +6,7 @@ import argparse
 import csv
 
 # Check HiBP API
+import hashlib
 import ssl
 import urllib2
 from multiprocessing import Pool
@@ -33,30 +34,35 @@ info = "\033[0;0;36m[i]\033[0m"
 question = "\033[0;0;37m[?]\033[0m"
 debug = "\033[0;0;31m[DEBUG]\033[0m"
 
-def getResponseCode(url):
+def getResponse(pw):
+    sha1 = hashlib.sha1(pw.encode()).hexdigest()
+    sha1_prefix = sha1[:5]
+    sha1_suffix = sha1[5:]
+    url = "https://api.pwnedpasswords.com/range/" + sha1_prefix
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
     try:
         req = urllib2.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         con = urllib2.urlopen(req, context=ssl_context)
-        return con.getcode(), "/".join(url.split("/")[4:])
+        response = con.read()
+        return response, pw, sha1_suffix
     except urllib2.HTTPError as e:
-        return 404, "dud"
+        return "", pw, sha1_suffix
 
 def check_HiBP_api(users):
     """Check cracked password against HiBP API"""
 
     CompromisedPW = []
     TestPasswords = []
-    urlpath = "https://api.pwnedpasswords.com/pwnedpassword/"
 
     for user in users:
         if (users[user]['cracked'] != None):
             TestPasswords.append(users[user]['cracked'])
 
     pool = Pool(processes=30)
-    
-    for code, password in pool.imap_unordered(getResponseCode, [(urlpath + pw) for pw in TestPasswords]):
-        if (code == 200):
+
+    for response, password, sha1_suffix in pool.imap_unordered(getResponse, [pw for pw in TestPasswords]):
+        if (sha1_suffix in response):
+            # Password is pwned
             CompromisedPW.append(password)
 
     return frozenset(CompromisedPW)
