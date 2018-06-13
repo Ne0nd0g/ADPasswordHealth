@@ -4,6 +4,7 @@ import datetime
 import os
 import argparse
 import csv
+import re
 
 # Check HiBP API
 import hashlib
@@ -44,9 +45,12 @@ def getResponse(pw):
         req = urllib2.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         con = urllib2.urlopen(req, context=ssl_context)
         response = con.read()
-        return response, pw, sha1_suffix
+        if (sha1_suffix.upper() in re.sub(r':.+','',response).split('\n')):
+            return True, pw
+        else:
+            return False, pw
     except urllib2.HTTPError as e:
-        return "", pw, sha1_suffix
+        return False, pw
 
 def check_HiBP_api(users):
     """Check cracked password against HiBP API"""
@@ -59,9 +63,9 @@ def check_HiBP_api(users):
             TestPasswords.append(users[user]['cracked'])
 
     pool = Pool(processes=30)
-
-    for response, password, sha1_suffix in pool.imap_unordered(getResponse, [pw for pw in TestPasswords]):
-        if (sha1_suffix in response):
+    
+    for response, password in pool.imap_unordered(getResponse, [pw for pw in TestPasswords]):
+        if (response):
             # Password is pwned
             CompromisedPW.append(password)
 
