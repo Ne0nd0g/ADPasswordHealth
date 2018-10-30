@@ -91,7 +91,7 @@ def generate_accounts_dict(john, secrets):
     for l in lines:
         if ":::" in l:
             s = l.split(":")
-            # check if historic machine account
+            # check if machine account history or machine account
             if re.search(r"\$_history\d{1,2}$", s[0]) or s[0].endswith("$"):
                 match = True
             else:
@@ -165,7 +165,7 @@ def generate_accounts_dict(john, secrets):
     jlines = john.read().splitlines()
     for j in jlines:
         if ":" in j:
-            # check if machine account
+            # check if machine account history or machine account
             if re.search(r"\$_history\d{1,2}$", j.split(":")[0]) or j.split(":")[0].endswith("$"):
                 match = True
             else:
