@@ -92,8 +92,12 @@ def generate_accounts_dict(john, secrets):
         if ":::" in l:
             s = l.split(":")
             # Quit parsing the line if it is a machine account and machine accounts aren't included
-            if s[0].endswith("$") and not args.machine:
-                continue
+            if not args.machine:
+                match = re.search(r"\$_history\d${1,2}", s[0])
+                if match:
+                    continue
+                elif s[0].endswith("$"):
+                    continue
 
             d = None     # Domain
             u = None     # Username
