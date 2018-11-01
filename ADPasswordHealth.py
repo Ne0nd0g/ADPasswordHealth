@@ -91,10 +91,17 @@ def generate_accounts_dict(john, secrets):
     for l in lines:
         if ":::" in l:
             s = l.split(":")
+            # check if machine account history or machine account
+            if re.search(r"\$_history\d{1,2}$", s[0]) or s[0].endswith("$"):
+                match = True
+            else:
+                match = False
+            
             # Quit parsing the line if it is a machine account and machine accounts aren't included
-            if s[0].endswith("$") and not args.machine:
-                continue
-
+            if not args.machine:
+                if match:
+                    continue
+            
             d = None     # Domain
             u = None     # Username
             t = 'user'   # Type of account
@@ -108,13 +115,15 @@ def generate_accounts_dict(john, secrets):
             if len(s[0].split("\\")) > 1:
                 d = s[0].split("\\")[0]
                 u = s[0].split("\\")[1]
+                if match:
+                    t = 'machine'
                 if VERBOSE:
                     print info + "%s\\%s" % (d, u)
             elif len(s[0].split("\\")) == 1:
-                if s[0].endswith("$") and args.machine:
+                if match and args.machine:
                     u = s[0]
                     t = 'machine'
-                elif not s[0].endswith("$"):
+                elif not match:
                     u = s[0]
                 if VERBOSE:
                     print info + "%s" % u
@@ -156,14 +165,20 @@ def generate_accounts_dict(john, secrets):
     jlines = john.read().splitlines()
     for j in jlines:
         if ":" in j:
-            if args.machine and j.split(":")[0].endswith("$"):
+            # check if machine account history or machine account
+            if re.search(r"\$_history\d{1,2}$", j.split(":")[0]) or j.split(":")[0].endswith("$"):
+                match = True
+            else:
+                match = False
+                
+            if match and args.machine:
                 if j.split(":")[0] in users.keys():
                     users[j.split(":")[0]]['cracked'] = j.split(":")[1]
                 else:
                     print "%s" % j.split(":")[0]
                     raw_input("Account for cracked password not in dataset")
 
-            elif not j.split(":")[0].endswith("$"):  # Eliminate machine hashes
+            elif not match:  # Eliminate machine hashes, including history
                 if j.split(":")[0] in users.keys():
                     users[j.split(":")[0]]['cracked'] = j.split(":")[1]
                 else:
